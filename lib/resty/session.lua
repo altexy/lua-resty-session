@@ -44,9 +44,9 @@ local function enabled(value)
     end
 
     return value == true
-        or value == "1"
-        or value == "true"
-        or value == "on"
+            or value == "1"
+            or value == "true"
+            or value == "on"
 end
 
 local function ifnil(value, default)
@@ -82,7 +82,7 @@ local function set_cookie(session, value, expires)
 
     local i = 3
 
-     -- build cookie parameters, elements 1+2 will be set later
+    -- build cookie parameters, elements 1+2 will be set later
     if expires then
         -- we're expiring/deleting the data, so set an expiry in the past
         output[i] = "; Expires=Thu, 01 Jan 1970 00:00:01 GMT; Max-Age=0"
@@ -106,8 +106,8 @@ local function set_cookie(session, value, expires)
     i = i + 2
 
     if cookie.samesite == "Lax"
-    or cookie.samesite == "Strict"
-    or cookie.samesite == "None"
+            or cookie.samesite == "Strict"
+            or cookie.samesite == "None"
     then
         output[i] = "; SameSite="
         output[i+1] = cookie.samesite
@@ -190,16 +190,52 @@ local function set_cookie(session, value, expires)
     return true
 end
 
+local function get_cookie_from_header(name)
+    local cookies = var.http_cookie
+    if not cookies then
+        return
+    end
+
+    local results = {}
+    local name_len = #name
+    local i = 1
+    local j = 0
+    local sc_pos = find(cookies, ";", 1, true)
+    while sc_pos do
+        local cookie = sub(cookies, i, sc_pos - 1)
+        local eq_pos = find(cookie, "=", 1, true)
+        if eq_pos then
+            local cookie_name = gsub(sub(cookie, 1, eq_pos - 1), "^%s+", "")
+            if cookie_name == name then
+                return sub(cookie, eq_pos + 1)
+            end
+        end
+        i = sc_pos + 1
+        sc_pos = find(cookies, ";", i, true)
+    end
+
+    local cookie = sub(cookies, i)
+    if cookie and cookie ~= "" then
+        local eq_pos = find(cookie, "=", 1, true)
+        if eq_pos then
+            local cookie_name = gsub(sub(cookie, 1, eq_pos - 1), "^%s+", "")
+            if cookie_name == name then
+                return sub(cookie, eq_pos + 1)
+            end
+        end
+    end
+end
+
 local function get_cookie(session, i)
-    local cookie_name = { "cookie_", session.name }
+    local cookie_name = { session.name }
     if i then
-        cookie_name[3] = "_"
-        cookie_name[4] = i
+        cookie_name[2] = "_"
+        cookie_name[3] = i
     else
         i = 1
     end
 
-    local cookie = var[concat(cookie_name)]
+    local cookie = get_cookie_from_header(concat(cookie_name))
     if not cookie then
         return nil
     end
@@ -579,7 +615,7 @@ function session.start(opts)
     end
 
     if self.expires - self.now < self.cookie.renew
-    or self.expires > self.now + self.cookie.lifetime
+            or self.expires > self.now + self.cookie.lifetime
     then
         local ok, err = save(self)
         if not ok then
@@ -667,8 +703,8 @@ function session:hide()
             local cookie_name = gsub(sub(cookie, 1, eq_pos - 1), "^%s+", "")
             if cookie_name ~= name and cookie_name ~= "" then
                 if sub(cookie_name, 1, name_len)                ~= name
-                or sub(cookie_name, name_len + 1, name_len + 1) ~= "_"
-                or tonumber(sub(cookie_name, name_len + 2), 10) == nil
+                        or sub(cookie_name, name_len + 1, name_len + 1) ~= "_"
+                        or tonumber(sub(cookie_name, name_len + 2), 10) == nil
                 then
                     j = j + 1
                     results[j] = cookie
@@ -686,8 +722,8 @@ function session:hide()
             local cookie_name = gsub(sub(cookie, 1, eq_pos - 1), "^%s+", "")
             if cookie_name ~= name and cookie_name ~= "" then
                 if sub(cookie_name, 1, name_len)                ~= name
-                or sub(cookie_name, name_len + 1, name_len + 1) ~= "_"
-                or tonumber(sub(cookie_name, name_len + 2), 10) == nil
+                        or sub(cookie_name, name_len + 1, name_len + 1) ~= "_"
+                        or tonumber(sub(cookie_name, name_len + 2), 10) == nil
                 then
                     j = j + 1
                     results[j] = cookie
